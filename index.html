@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Pixel Art Multijoueur</title>
+    <style>
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(16, 20px);
+            grid-template-rows: repeat(16, 20px);
+            gap: 1px;
+            margin-top: 20px;
+        }
+
+        .pixel {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Pixel Art Multijoueur</h1>
+    <div id="grid"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js"></script>
+
+    <script>
+        // 🔧 Remplace par ta propre config Firebase :
+        const firebaseConfig = {
+            apiKey: "AIzaSyAssJ59anNZdTk_eaAo52JQrAtz8bGNkUQ",
+            authDomain: "coloriage-rabbithole.firebaseapp.com",
+            projectId: "coloriage-rabbithole",
+            storageBucket: "coloriage-rabbithole.firebasestorage.app",
+            messagingSenderId: "267094862941",
+            appId: "1:267094862941:web:ad71aded79b8ce9d8cb1b4",
+            measurementId: "G-G8PJTNMK0J"
+        };
+
+        // Initialisation
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        firebase.auth().signInAnonymously();
+
+        // Création de la grille
+        const grid = document.getElementById("grid");
+        const pixels = {};
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                const div = document.createElement("div");
+                div.className = "pixel";
+                div.dataset.coord = `${x}_${y}`;
+                div.addEventListener("click", () => {
+                    db.ref("pixels/" + div.dataset.coord).set("#FF0000");
+                });
+                grid.appendChild(div);
+                pixels[`${x}_${y}`] = div;
+            }
+        }
+
+        // Écoute des changements en temps réel
+        db.ref("pixels").on("child_added", updatePixel);
+        db.ref("pixels").on("child_changed", updatePixel);
+
+        function updatePixel(snapshot) {
+            const coord = snapshot.key;
+            const color = snapshot.val();
+            if (pixels[coord]) {
+                pixels[coord].style.background = color;
+            }
+        }
+    </script>
+</body>
+
+</html>

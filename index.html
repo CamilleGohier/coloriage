@@ -50,6 +50,10 @@
         const db = firebase.database();
         firebase.auth().signInAnonymously();
 
+        firebase.auth().signInAnonymously().catch((error) => {
+            console.error("Échec de l’auth anonyme :", error);
+        });
+
         // Création de la grille
         const grid = document.getElementById("grid");
         const pixels = {};

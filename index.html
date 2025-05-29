@@ -27,55 +27,26 @@
     <h1>Pixel Art Multijoueur</h1>
     <div id="grid"></div>
 
-    <!-- Firebase App (namespace version) -->
-    <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth-compat.js"></script>
+    <script type="module">
+        import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+        const supabaseUrl = 'https://<ton-projet>.supabase.co'
+        const supabaseKey = '<ta-clé-anon>'
+        const supabase = createClient(supabaseUrl, supabaseKey)
 
-    <script>
-        // 🔧 Remplace par ta propre config Firebase :
-        const firebaseConfig = {
-            apiKey: "AIzaSyAssJ59anNZdTk_eaAo52JQrAtz8bGNkUQ",
-            authDomain: "coloriage-rabbithole.firebaseapp.com",
-            databaseURL: "https://coloriage-rabbithole-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "coloriage-rabbithole",
-            appId: "1:267094862941:web:ad71aded79b8ce9d8cb1b4",
-        };
+        // Exemple : insérer un pixel
+        await supabase.from('pixels').insert([{ x: 5, y: 5, color: '#FF0000' }])
 
-        // Initialisation
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        firebase.auth().signInAnonymously();
-
-        // Création de la grille
-        const grid = document.getElementById("grid");
-        const pixels = {};
-        for (let y = 0; y < 16; y++) {
-            for (let x = 0; x < 16; x++) {
-                const div = document.createElement("div");
-                div.className = "pixel";
-                div.dataset.coord = `${x}_${y}`;
-                div.addEventListener("click", () => {
-                    db.ref("pixels/" + div.dataset.coord).set("#FF0000");
-                });
-                grid.appendChild(div);
-                pixels[`${x}_${y}`] = div;
-            }
-        }
-
-        // Écoute des changements en temps réel
-        db.ref("pixels").on("child_added", updatePixel);
-        db.ref("pixels").on("child_changed", updatePixel);
-
-        function updatePixel(snapshot) {
-            const coord = snapshot.key;
-            const color = snapshot.val();
-            if (pixels[coord]) {
-                pixels[coord].style.background = color;
-            }
-        }
+        supabase
+            .channel('public:pixels')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'pixels' }, payload => {
+                console.log('🔄 Pixel mis à jour :', payload.new)
+                const { x, y, color } = payload.new
+                // Mets à jour ton pixel ici
+            })
+            .subscribe()
     </script>
+
 </body>
 
 </html>

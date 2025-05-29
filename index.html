@@ -1,83 +1,88 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Pixel Art Multijoueur (Supabase)</title>
-  <style>
-    #grid {
-      display: grid;
-      grid-template-columns: repeat(16, 20px);
-      grid-template-rows: repeat(16, 20px);
-      gap: 1px;
-      margin-top: 20px;
-    }
-    .pixel {
-      width: 20px;
-      height: 20px;
-      background: white;
-      border: 1px solid #ccc;
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-  <h1>Pixel Art Multijoueur (Supabase)</h1>
-  <div id="grid"></div>
-
-  <!-- Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.5/+esm"></script>
-  <script type="module">
-    // 🔧 Configure Supabase ici :
-    const SUPABASE_URL = "https://vmxannsmwhurzejthfnr.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZteGFubnNtd2h1cnplanRoZm5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0OTIyMDEsImV4cCI6MjA2NDA2ODIwMX0.LMlGQE7F1FwNsKC0-20KbYc3SQCueK8Xj-zxpG3y7Kk";
-
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    const grid = document.getElementById("grid");
-    const pixels = {};
-
-    // Construction de la grille
-    for (let y = 0; y < 16; y++) {
-      for (let x = 0; x < 16; x++) {
-        const div = document.createElement("div");
-        const coord = `${x}_${y}`;
-        div.className = "pixel";
-        div.dataset.coord = coord;
-        div.addEventListener("click", async () => {
-          await supabase
-            .from("pixels")
-            .upsert({ coord, color: "#FF0000" });
-        });
-        grid.appendChild(div);
-        pixels[coord] = div;
-      }
-    }
-
-    // Mise à jour locale d'un pixel
-    function updatePixel({ coord, color }) {
-      if (pixels[coord]) {
-        pixels[coord].style.background = color;
-      }
-    }
-
-    // Chargement initial
-    const { data: initialPixels } = await supabase
-      .from("pixels")
-      .select("*");
-
-    initialPixels.forEach(updatePixel);
-
-    // Écoute en temps réel via Supabase Realtime
-    supabase
-      .channel('realtime:pixels')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'pixels' },
-        (payload) => {
-          updatePixel(payload.new);
+    <meta charset="UTF-8">
+    <title>Pixel Art Multijoueur (Supabase)</title>
+    <style>
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(16, 20px);
+            grid-template-rows: repeat(16, 20px);
+            gap: 1px;
+            margin-top: 20px;
         }
-      )
-      .subscribe();
-  </script>
+
+        .pixel {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Pixel Art Multijoueur (Supabase)</h1>
+    <div id="grid"></div>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // 🔧 Configure Supabase ici :
+        const SUPABASE_URL = "https://vmxannsmwhurzejthfnr.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZteGFubnNtd2h1cnplanRoZm5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0OTIyMDEsImV4cCI6MjA2NDA2ODIwMX0.LMlGQE7F1FwNsKC0-20KbYc3SQCueK8Xj-zxpG3y7Kk";
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const grid = document.getElementById("grid");
+        const pixels = {};
+
+        // Construction de la grille
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                const div = document.createElement("div");
+                const coord = `${x}_${y}`;
+                div.className = "pixel";
+                div.dataset.coord = coord;
+                div.addEventListener("click", async () => {
+                    await supabase
+                        .from("pixels")
+                        .upsert({ coord, color: "#FF0000" });
+                });
+                grid.appendChild(div);
+                pixels[coord] = div;
+            }
+        }
+
+        // Mise à jour locale d'un pixel
+        function updatePixel({ coord, color }) {
+            if (pixels[coord]) {
+                pixels[coord].style.background = color;
+            }
+        }
+
+        // Chargement initial
+        supabase
+            .from("pixels")
+            .select("*")
+            .then(({ data }) => {
+                data.forEach(updatePixel);
+            });
+
+        // Realtime via Supabase
+        supabase
+            .channel('realtime:pixels')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'pixels' },
+                (payload) => {
+                    updatePixel(payload.new);
+                }
+            )
+            .subscribe();
+    </script>
 </body>
+
 </html>

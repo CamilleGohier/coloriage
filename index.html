@@ -48,11 +48,6 @@
         const db = firebase.database();
         firebase.auth().signInAnonymously();
 
-        firebase.auth().signInAnonymously()
-  .then(() => console.log("Connecté en anonyme"))
-  .catch((err) => console.error("Erreur auth :", err));
-
-
         // Création de la grille
         const grid = document.getElementById("grid");
         const pixels = {};
@@ -74,17 +69,12 @@
         db.ref("pixels").on("child_changed", updatePixel);
 
         function updatePixel(snapshot) {
-            console.log("Pixel reçu depuis Firebase :", snapshot.key, snapshot.val());
             const coord = snapshot.key;
             const color = snapshot.val();
             if (pixels[coord]) {
                 pixels[coord].style.background = color;
             }
         }
-
-            db.ref("pixels/5_5").once("value").then(snap => {
-                console.log("Valeur brute de 5_5 :", snap.val());
-            });
     </script>
 </body>
 

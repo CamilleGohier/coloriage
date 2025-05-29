@@ -34,7 +34,7 @@
         const SUPABASE_URL = "https://vmxannsmwhurzejthfnr.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZteGFubnNtd2h1cnplanRoZm5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0OTIyMDEsImV4cCI6MjA2NDA2ODIwMX0.LMlGQE7F1FwNsKC0-20KbYc3SQCueK8Xj-zxpG3y7Kk";
 
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const grid = document.getElementById("grid");
         const pixels = {};

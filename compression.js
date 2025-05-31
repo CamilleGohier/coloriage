@@ -12,8 +12,9 @@ function compressImage(rawPixels, width, height, scale, nbColors) {
     }
 
     const { resizedPixels, newWidth, newHeight } = imageSizeCompression(organisedPixels, width, height, scale);
-    const colorsReducedPixels = imageColorCompression(resizedPixels, nbColors, newWidth, newHeight);
-    drawImage(colorsReducedPixels, newWidth, newHeight, width, height, scale);
+    const { grid, palette } = imageColorCompression(resizedPixels, nbColors, newWidth, newHeight);
+    console.log(grid);
+    console.log(palette);
 }
 
 function getColors(pixels, height, width) {
@@ -94,12 +95,12 @@ function updateCentroids(centroids, nbColors) {
 }
 
 function imageColorCompression(pixels, nbColors, width, height) {
-    let finishedPixels = pixels;
     let centroids = getInitialCentroids(pixels, width, height, nbColors);
     centroids = fillClusters(height, width, centroids, pixels, nbColors);
     let oldCentroids = centroids;
     centroids = updateCentroids(oldCentroids, nbColors);
 
+    let grid = pixels;
     for (let x = 0; x < height; x++) {
         for (let y = 0; y < width; y++) {
             let bestDistance = 1000;
@@ -114,11 +115,23 @@ function imageColorCompression(pixels, nbColors, width, height) {
                     bestPos = posClus;
                 }
             }
-            finishedPixels[x][y] = centroids[bestPos].center;
+            grid[x][y] = bestPos + 1;
         }
     }
 
-    return finishedPixels;
+    const componentToHex = (c) => {
+        const hex = c.toString(16);
+        return hex.length == 1 ? "0" + hex : hex;
+    }
+    const rgbToHex = (r, g, b) => {
+        return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+    }
+
+    let palette = [];
+    for (let curCentroid = 0; curCentroid < centroids.length; curCentroid++)
+        palette.push(rgbToHex(centroids[curCentroid].center[0], centroids[curCentroid].center[1], centroids[curCentroid].center[2]));
+
+    return { grid, palette };
 }
 
 function imageSizeCompression(organisedPixels, width, height, scale) {
@@ -169,28 +182,4 @@ function handleFileUpload(files)
     };
 
     fileReader.readAsDataURL(file);
-}
-
-function drawImage(pixels, width, height, originalWidth, originalHeight) {
-    const canvas = document.getElementById("canvasCompressed");
-    const ctx = canvas.getContext('2d');
-
-    canvas.width = width;
-    canvas.height = height;
-    canvas.style.width = originalWidth + "px";
-    canvas.style.height = originalHeight + "px";
-
-    const imageData = ctx.createImageData(width, height);
-    let i = 0;
-    for (let x = 0; x < height; x++) {
-        for (let y = 0; y < width; y++) {
-            imageData.data[i] = pixels[x][y][0];
-            imageData.data[i + 1] = pixels[x][y][1];
-            imageData.data[i + 2] = pixels[x][y][2];
-            imageData.data[i + 3] = 255;
-            i += 4;
-        }
-    }
-
-    ctx.putImageData(imageData, 0, 0);
 }
